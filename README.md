@@ -36,16 +36,13 @@ $ yarn install
 ```bash
 # start local db Postgres image
 $ yarn db:dev:up
-```
-```bash
+
 # remove local db Postgres image
 $ yarn db:dev:rm
-```
-```bash
+
 # restart local db Postgres image
 $ yarn db:dev:restart
-```
-```bash
+
 # Apply migrations
 $ yarn prisma:dev:deploy
 ```
