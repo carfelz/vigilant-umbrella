@@ -4,6 +4,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import * as pactum from 'pactum';
 import { SignInDto, SignUpDto } from 'src/auth/dto';
+import { EditUserDto } from 'src/users/dto';
 
 const mockData = {
   signIn: {
@@ -13,6 +14,11 @@ const mockData = {
   signUp: {
     email: 'test@mail.com',
     password: '123456789',
+    firstName: 'John',
+    lastName: 'Doe',
+  },
+  edit: {
+    email: 'test@mail.com',
     firstName: 'John',
     lastName: 'Doe',
   },
@@ -143,10 +149,13 @@ describe('App e2e', () => {
   });
 
   describe('Users', () => {
+    let customMock: EditUserDto;
+
+    beforeEach(() => {
+      customMock = { ...mockData.edit };
+    });
     describe('Get me', () => {
       it('Should return a user with a given access_token', () => {
-        const customMock = { ...mockData.signUp };
-        delete customMock.password;
         return pactum
           .spec()
           .get('/users/me')
@@ -157,8 +166,26 @@ describe('App e2e', () => {
           .expectJsonLike(customMock);
       });
     });
-    describe('Edit user', () => {});
+    describe('Edit user', () => {
+      it('Should update a user', () => {
+        return pactum
+          .spec()
+          .put('/users/edit')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .withBody({
+            firstName: 'Carlos',
+          })
+          .expectStatus(200)
+          .expectJsonLike({
+            ...customMock,
+            firstName: 'Carlos',
+          });
+      });
+    });
   });
+
   describe('Bookmarks', () => {
     describe('Create bookmark', () => {});
     describe('Get bookmarks', () => {});
