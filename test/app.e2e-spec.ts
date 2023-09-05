@@ -165,6 +165,10 @@ describe('App e2e', () => {
           .expectStatus(200)
           .expectJsonLike(customMock);
       });
+
+      it('Should return unauthorized if jwt not in headers', () => {
+        return pactum.spec().get('/users/me').expectStatus(401);
+      });
     });
     describe('Edit user', () => {
       it('Should update a user', () => {
@@ -175,19 +179,33 @@ describe('App e2e', () => {
             Authorization: 'Bearer $S{userAt}',
           })
           .withBody({
-            firstName: 'Carlos',
+            firstName: 'Jhonny',
           })
           .expectStatus(200)
           .expectJsonLike({
             ...customMock,
-            firstName: 'Carlos',
+            firstName: 'Jhonny',
           });
+      });
+
+      it('Should not update the user if no jwt', () => {
+        return pactum
+          .spec()
+          .put('/users/edit')
+          .withBody({
+            firstName: 'Jhonny',
+          })
+          .expectStatus(401);
       });
     });
   });
 
   describe('Bookmarks', () => {
-    describe('Create bookmark', () => {});
+    describe('Create bookmark', () => {
+      it('Should create a bookmark', () => {});
+      it('Should throw an error if no body passed', () => {});
+      it('SHould throw an error if user not authenticated', () => {});
+    });
     describe('Get bookmarks', () => {});
     describe('Get bookmark by ID', () => {});
     describe('Update bookmark', () => {});
