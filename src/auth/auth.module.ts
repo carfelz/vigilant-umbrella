@@ -12,7 +12,7 @@ const config = new ConfigService();
   imports: [
     JwtModule.register({
       global: true,
-      secret: config.get('JWT_SECRET'),
+      secret: config.get('POSTGRES_PASSWORD'),
       signOptions: {
         expiresIn: '15m',
       },

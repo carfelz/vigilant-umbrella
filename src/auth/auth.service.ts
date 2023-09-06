@@ -66,7 +66,7 @@ export class AuthService {
       email,
     };
 
-    const secret = this.config.get('JWT_SECRET');
+    const secret = this.config.get('POSTGRES_PASSWORD');
     const token = await this.jwt.signAsync(payload);
 
     return {
