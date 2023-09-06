@@ -1,18 +1,23 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
-
 
 @Injectable()
 export class PrismaService extends PrismaClient {
-    // const DB_URL = this.configService.get<string>('DATABASE_USER')
-    constructor() {
-        super({
-            datasources: {
-                db: {
-                    url: "postgresql://postgres:123@localhost:5434/nest?schema=public",
-                }
-            }
-        })   
-    }
+  constructor(config: ConfigService) {
+    super({
+      datasources: {
+        db: {
+          url: config.get('DATABASE_URL'),
+        },
+      },
+    });
+  }
 
+  clearDB() {
+    return this.$transaction([
+      this.bookmark.deleteMany(),
+      this.user.deleteMany(),
+    ]);
+  }
 }
