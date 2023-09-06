@@ -5,24 +5,8 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import * as pactum from 'pactum';
 import { SignInDto, SignUpDto } from 'src/auth/dto';
 import { EditUserDto } from 'src/users/dto';
-
-const mockData = {
-  signIn: {
-    email: 'test@mail.com',
-    password: '123456789',
-  },
-  signUp: {
-    email: 'test@mail.com',
-    password: '123456789',
-    firstName: 'John',
-    lastName: 'Doe',
-  },
-  edit: {
-    email: 'test@mail.com',
-    firstName: 'John',
-    lastName: 'Doe',
-  },
-};
+import { userModuleData, bookmarkModuleData } from './testData';
+import { CreateBookmarkDto } from 'src/bookmarks/dto/create-bookmark.dto';
 
 let app: INestApplication;
 let prisma: PrismaService;
@@ -56,7 +40,7 @@ describe('App e2e', () => {
 
   describe('Auth', () => {
     beforeAll(() => {
-      signUpData = mockData.signUp;
+      signUpData = userModuleData.signUp;
     });
     describe('Signup', () => {
       it('Creates a user', () => {
@@ -101,13 +85,21 @@ describe('App e2e', () => {
           .expectStatus(400);
       });
 
+      it('Throws error error if email is already in use', () => {
+        return pactum
+          .spec()
+          .post('/auth/signup')
+          .withBody(signUpData)
+          .expectStatus(403);
+      });
+
       it('Thows error no Body passed', () => {
         return pactum.spec().post('/auth/signup').expectStatus(400);
       });
     });
     describe('Signin', () => {
       beforeEach(() => {
-        signInData = mockData.signIn;
+        signInData = userModuleData.signIn;
       });
 
       it('Thows an error is no Body passed', () => {
@@ -152,7 +144,7 @@ describe('App e2e', () => {
     let customMock: EditUserDto;
 
     beforeEach(() => {
-      customMock = { ...mockData.edit };
+      customMock = { ...userModuleData.edit };
     });
     describe('Get me', () => {
       it('Should return a user with a given access_token', () => {
@@ -201,14 +193,103 @@ describe('App e2e', () => {
   });
 
   describe('Bookmarks', () => {
+    let customMock: CreateBookmarkDto;
     describe('Create bookmark', () => {
-      it('Should create a bookmark', () => {});
-      it('Should throw an error if no body passed', () => {});
-      it('SHould throw an error if user not authenticated', () => {});
+      beforeEach(() => {
+        customMock = { ...bookmarkModuleData.createBookmark };
+      });
+      it('Should create a bookmark', () => {
+        return pactum
+          .spec()
+          .post('/bookmarks')
+          .withBody(customMock)
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(201)
+          .expectJsonLike({
+            ...customMock,
+          })
+          .stores((resquest, response) => {
+            return {
+              bookmarkId: response.body.id,
+            };
+          });
+      });
+      it('SHould throw an error if title exists', () => {
+        return pactum
+          .spec()
+          .post('/bookmarks')
+          .withBody(customMock)
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(403);
+      });
+      it('Should throw an error if no body passed', () => {
+        return pactum
+          .spec()
+          .post('/bookmarks')
+          .withBody(customMock)
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(403);
+      });
+      it('Should throw an error if user not authenticated', () => {
+        return pactum
+          .spec()
+          .post('/bookmarks')
+          .withBody(customMock)
+          .expectStatus(401);
+      });
     });
-    describe('Get bookmarks', () => {});
-    describe('Get bookmark by ID', () => {});
-    describe('Update bookmark', () => {});
-    describe('Delete bookmark', () => {});
+    describe('Get bookmarks', () => {
+      it('Should return all bookmarks', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200)
+          .expectJsonLike([
+            {
+              ...customMock,
+            },
+          ]);
+      });
+
+      it('Should throw error if user not authenticated', () => {
+        return pactum.spec().get('/bookmarks').expectStatus(401);
+      });
+    });
+    describe('Get bookmark by ID', () => {
+      it('Should return a bookmark by id', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks/$S{bookmarkId}')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200)
+          .expectJsonLike({
+            ...customMock,
+          });
+      });
+      it('Should throw error if user not authenticated', () => {
+        return pactum.spec().get('/bookmarks/$S{bookmarkId}').expectStatus(401);
+      });
+      it('Should throw error if bookmark not found', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks/ujjuu4u5ju445')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(404)
+          .inspect();
+      });
+    });
   });
 });

@@ -6,13 +6,15 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { BookmarksService } from './bookmarks.service';
-import { JwtGuard } from 'src/auth/guards';
-import { GetUser } from 'src/auth/decorators';
+import { JwtGuard } from '../auth/guards/index';
+import { GetUser } from '../auth/decorators/index';
 import { CreateBookmarkDto } from './dto/create-bookmark.dto';
 import { EditBookmarkDto } from './dto/edit-bookmark.dto';
 
@@ -43,11 +45,12 @@ export class BookMarkController {
   }
 
   @Put(':id')
-  updateBookmark(
+  editBookmarkById(
     @GetUser('id') userId: string,
     @Param('id') bookmarkId: string,
-    @Body() dto: EditBookmarkDto,
+    @Req() req: Request,
   ) {
+    const dto = req.body;
     return this.bookmarkService.updateBookmark(userId, bookmarkId, dto);
   }
 
